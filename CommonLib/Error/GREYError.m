@@ -18,6 +18,7 @@
 
 #import "GREYObjectFormatter.h"
 #import "NSError+GREYCommon.h"
+#import "GREYErrorFormatter.h"
 
 NSString *const kGREYGenericErrorDomain = @"com.google.earlgrey.GenericErrorDomain";
 NSInteger const kGREYGenericErrorCode = 0;
@@ -108,10 +109,7 @@ GREYError *I_GREYErrorMake(NSString *domain, NSInteger code, NSDictionary *userI
 }
 
 - (NSString *)description {
-  return [GREYObjectFormatter formatDictionary:[self grey_descriptionDictionary]
-                                        indent:kGREYObjectFormatIndent
-                                     hideEmpty:YES
-                                      keyOrder:nil];
+  return [[[GREYErrorFormatter alloc] initWithError:self] humanReadableDescription];
 }
 
 - (NSDictionary *)grey_descriptionDictionary {
