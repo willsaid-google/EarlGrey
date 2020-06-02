@@ -193,7 +193,7 @@
   } else if (searchActionError) {
     NSString *searchActionDescription = searchActionError.localizedDescription;
     NSString *description =
-        [NSString stringWithFormat:@"Search action failed: %@\n", searchActionDescription];
+        [NSString stringWithFormat:@"Search action failed: %@", searchActionDescription];
     I_GREYPopulateError(&error, kGREYInteractionErrorDomain,
                         kGREYInteractionElementNotFoundErrorCode, description);
   } else if (executorError || isSearchTimedOut) {
@@ -748,7 +748,6 @@
         reason = [NSString stringWithFormat:@"Cannot find UI Element.\n"
                                             @"Exception with Assertion: %@",
                                             reasonDetail];
-
         [assertionError setErrorInfo:errorDetails];
         break;
       }
@@ -806,7 +805,9 @@
   NSString *hierarchy = [self grey_unifyAndExtractHierarchyFromError:interactionError];
 
   // Add information such as element matcher and any nested error info.
-  NSMutableDictionary<NSString *, id> *userInfo = [[NSMutableDictionary alloc] init];
+  // Copy over the matcher details from the error info dictionary.
+  NSMutableDictionary<NSString *, id> *userInfo
+      = [[NSMutableDictionary alloc] initWithDictionary:interactionError.errorInfo copyItems:YES];
   [userInfo setValue:interactionError.localizedDescription forKey:NSLocalizedDescriptionKey];
   [userInfo setValue:reason forKey:NSLocalizedFailureReasonErrorKey];
   // Nested errors contain extra information such as stack traces, error codes that aren't useful.
@@ -825,7 +826,7 @@
   if ([interactionError isKindOfClass:[GREYError class]]) {
     wrappedError = I_GREYErrorMake(
         interactionError.domain, interactionError.code, userInfo, interactionError.filePath,
-        interactionError.line, interactionError.functionName, interactionError.descriptionGlossary,
+        interactionError.line, interactionError.functionName,
         interactionError.stackTrace, hierarchy, appScreenshots);
   } else {
     // In case the error is an internal error from a custom matcher or assertion, just convert it

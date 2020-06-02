@@ -141,12 +141,10 @@
       });
       if (!window) {
         NSString *description =
-            [NSString stringWithFormat:@"[Element] is not attached to a window."];
-        NSDictionary<NSString *, NSString *> *glossary = @{@"Element" : [element grey_description]};
-
-        I_GREYPopulateErrorNoted(error, kGREYInteractionErrorDomain,
-                                 kGREYInteractionActionFailedErrorCode, description, glossary);
-
+            [NSString stringWithFormat:@"Element is not attached to a window:"
+                                       @"\n%@", [element grey_description]];
+        I_GREYPopulateError(error, kGREYInteractionErrorDomain,
+                            kGREYInteractionActionFailedErrorCode, description);
         return NO;
       }
       return [GREYTapper tapOnWindow:window
