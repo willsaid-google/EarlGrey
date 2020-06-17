@@ -62,6 +62,10 @@ typedef NS_OPTIONS(NSUInteger, GREYErrorFormatterFlag) {
   GREYErrorFormatterFlagUIHierarchy = 1 << 6,
   /** If Multiple Elements were Matched */
   GREYErrorFormatterFlagMultipleMatched = 1 << 7,
+  /** Constraint(s) that Failed */
+  GREYErrorFormatterFlagFailedConstraints = 1 << 8,
+  /** Description of the Element Involved in the Error */
+  GREYErrorFormatterFlagElementDescription = 1 << 9
 };
 
 #pragma mark - GREYErrorFormatter
@@ -85,12 +89,14 @@ typedef NS_OPTIONS(NSUInteger, GREYErrorFormatterFlag) {
 BOOL GREYShouldUseErrorFormatterForError(GREYError *error) {
     return [error.domain isEqualToString:kGREYInteractionErrorDomain] &&
            (error.code == kGREYInteractionElementNotFoundErrorCode ||
-            error.code == kGREYInteractionMultipleElementsMatchedErrorCode);
+            error.code == kGREYInteractionMultipleElementsMatchedErrorCode ||
+            error.code == kGREYInteractionConstraintsFailedErrorCode);
 }
 
 BOOL GREYShouldUseErrorFormatterForExceptionReason(NSString *reason) {
   return [reason containsString:@"the desired element was not found"] ||
-         [reason containsString:@"Multiple elements were matched"];
+         [reason containsString:@"Multiple elements were matched"] ||
+         [reason containsString:@"Cannot perform action due to constraint"];
 }
 
 #pragma mark - Static Functions
@@ -113,6 +119,16 @@ static NSUInteger loggerKeys(GREYError *error) {
            GREYErrorFormatterFlagRecoverySuggestion |
            GREYErrorFormatterFlagElementMatcher     |
            GREYErrorFormatterFlagMultipleMatched    |
+           GREYErrorFormatterFlagUnderlyingError    |
+           GREYErrorFormatterFlagUIHierarchy;
+  }
+  if ([error.domain isEqualToString:kGREYInteractionErrorDomain] &&
+       error.code == kGREYInteractionConstraintsFailedErrorCode) {
+    return GREYErrorFormatterFlagExceptionReason    |
+           GREYErrorFormatterFlagCriteria           |
+           GREYErrorFormatterFlagRecoverySuggestion |
+           GREYErrorFormatterFlagFailedConstraints  |
+           GREYErrorFormatterFlagElementDescription |
            GREYErrorFormatterFlagUnderlyingError    |
            GREYErrorFormatterFlagUIHierarchy;
   }
@@ -166,6 +182,22 @@ static NSString *loggerDescription(GREYError *error) {
     if (elementMatcher) {
       [logger addObject:[NSString stringWithFormat:@"%@:\n%@", kErrorDetailElementMatcherKey,
                          elementMatcher]];
+    }
+  }
+  
+  if (keys & GREYErrorFormatterFlagFailedConstraints) {
+    NSString *failedConstraints = error.userInfo[kErrorDetailConstraintRequirementKey];
+    if (failedConstraints) {
+      [logger addObject:[NSString stringWithFormat:@"%@:\n%@", kErrorDetailConstraintRequirementKey,
+                         failedConstraints]];
+    }
+  }
+  
+  if (keys & GREYErrorFormatterFlagElementDescription) {
+    NSString *element = error.userInfo[kErrorDetailElementDescriptionKey];
+    if (element) {
+      [logger addObject:[NSString stringWithFormat:@"%@:\n%@", kErrorDetailElementDescriptionKey,
+                         element]];
     }
   }
   

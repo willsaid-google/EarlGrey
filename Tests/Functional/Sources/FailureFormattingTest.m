@@ -177,4 +177,26 @@
   XCTAssertTrue([_handler.details containsString:@"UI Hierarchy"]);
 }
 
+- (void)testConstraintsFailureErrorDescription {
+  [[EarlGrey selectElementWithMatcher:grey_text(@"Basic Views")] performAction:grey_tap()];
+  [[EarlGrey selectElementWithMatcher:grey_buttonTitle(@"Disabled")]
+      performAction:grey_scrollInDirection(kGREYDirectionUp, 20)
+              error:nil];
+  NSString *expectedDetails1 = @"Cannot perform action due to constraint(s) failure.\n"
+                               @"\n"
+                               @"Adjust element properties so that it matches the failed "
+                               @"constraint(s).\n"
+                               @"\n"
+                               @"Failed Constraint(s):\n"
+                               @"kindOfClass('UIScrollView')kindOfClass('WKWebView'), \n"
+                               @"\n"
+                               @"Element Description:\n"
+                               @"<UIButton:";
+  NSString *expectedDetails2 = @"Action Name: Scroll Up for 20\n"
+                               @"\n"
+                               @"UI Hierarchy";
+  XCTAssertTrue([_handler.details containsString:expectedDetails1]);
+  XCTAssertTrue([_handler.details containsString:expectedDetails2]);
+}
+
 @end
