@@ -60,6 +60,8 @@ typedef NS_OPTIONS(NSUInteger, GREYErrorFormatterFlag) {
   GREYErrorFormatterFlagUnderlyingError = 1 << 5,
   /** App UI Hierarchy */
   GREYErrorFormatterFlagUIHierarchy = 1 << 6,
+  /** If Multiple Elements were Matched */
+  GREYErrorFormatterFlagMultipleMatched = 1 << 7,
 };
 
 #pragma mark - GREYErrorFormatter
@@ -81,12 +83,14 @@ typedef NS_OPTIONS(NSUInteger, GREYErrorFormatterFlag) {
 #pragma mark - Public Functions
 
 BOOL GREYShouldUseErrorFormatterForError(GREYError *error) {
-  return [error.domain isEqualToString:kGREYInteractionErrorDomain] &&
-          error.code == kGREYInteractionElementNotFoundErrorCode;
+    return [error.domain isEqualToString:kGREYInteractionErrorDomain] &&
+           (error.code == kGREYInteractionElementNotFoundErrorCode ||
+            error.code == kGREYInteractionMultipleElementsMatchedErrorCode);
 }
 
 BOOL GREYShouldUseErrorFormatterForExceptionReason(NSString *reason) {
-  return [reason containsString:@"the desired element was not found"];
+  return [reason containsString:@"the desired element was not found"] ||
+         [reason containsString:@"Multiple elements were matched"];
 }
 
 #pragma mark - Static Functions
@@ -102,6 +106,15 @@ static NSUInteger loggerKeys(GREYError *error) {
             GREYErrorFormatterFlagSearchActionInfo |
             GREYErrorFormatterFlagUnderlyingError |
             GREYErrorFormatterFlagUIHierarchy;
+  }
+  if ([error.domain isEqualToString:kGREYInteractionErrorDomain] &&
+       error.code == kGREYInteractionMultipleElementsMatchedErrorCode) {
+    return GREYErrorFormatterFlagExceptionReason    |
+           GREYErrorFormatterFlagRecoverySuggestion |
+           GREYErrorFormatterFlagElementMatcher     |
+           GREYErrorFormatterFlagMultipleMatched    |
+           GREYErrorFormatterFlagUnderlyingError    |
+           GREYErrorFormatterFlagUIHierarchy;
   }
   GREYFatalAssertWithMessage(false, @"Error Domain and Code Not Yet Supported");
 }
@@ -166,6 +179,20 @@ static NSString *loggerDescription(GREYError *error) {
     if (actionCriteria) {
       [logger addObject:[NSString stringWithFormat:@"%@: %@", kErrorDetailActionNameKey,
                          actionCriteria]];
+    }
+  }
+  
+  if (keys & GREYErrorFormatterFlagMultipleMatched) {
+    NSArray<NSString *> *multipleElementsMatched = error.multipleElementsMatched;
+    if (multipleElementsMatched) {
+      [logger addObject:[NSString stringWithFormat:@"%@:", kErrorDetailElementsMatchedKey]];
+      [multipleElementsMatched enumerateObjectsUsingBlock: ^(NSString *element,
+                                                             NSUInteger index, BOOL *stop) {
+        // Numbered list of all elements that were matched, starting at 1.
+        [logger addObject:[NSString stringWithFormat:@"%lu. %@",
+                           (unsigned long)index + 1, element]];
+      }];
+      [logger addObject:@"\n"];
     }
   }
   
