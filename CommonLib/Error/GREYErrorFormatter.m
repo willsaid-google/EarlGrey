@@ -55,11 +55,13 @@ static NSString *const kHierarchyHeaderKey                       = @"UI Hierarch
 
 BOOL GREYShouldUseErrorFormatterForError(GREYError *error) {
   return [error.domain isEqualToString:kGREYInteractionErrorDomain] &&
-          error.code == kGREYInteractionElementNotFoundErrorCode;
+          (error.code == kGREYInteractionElementNotFoundErrorCode ||
+           error.code == kGREYInteractionTimeoutErrorCode);
 }
 
 BOOL GREYShouldUseErrorFormatterForExceptionReason(NSString *reason) {
-  return [reason containsString:@"the desired element was not found"];
+  return [reason containsString:@"the desired element was not found"] ||
+         [reason containsString:@"timed out"];
 }
 
 #pragma mark - Static Functions
