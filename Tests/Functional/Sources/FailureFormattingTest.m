@@ -60,7 +60,7 @@
 - (void)setUp {
   [super setUp];
   _handler = [[FailureFormatTestingFailureHandler alloc] init];
-  [NSThread mainThread].threadDictionary[GREYFailureHandlerKey] = _handler;
+//  [NSThread mainThread].threadDictionary[GREYFailureHandlerKey] = _handler;
 }
 
 /// Tests the Element Not Found formatting for kGREYInteractionElementNotFoundErrorCode
@@ -149,6 +149,38 @@
                               @"accessibilityID('TestWKWebView'))\n"
                               @"\n"
                               @"Action Name: Execute JavaScript";
+  XCTAssertTrue([_handler.details containsString:expectedDetails]);
+}
+
+- (void)testTimeoutErrorDescription {
+  [self openTestViewNamed:@"Scroll Views"];
+  id<GREYMatcher> matcher = grey_allOf(grey_accessibilityLabel(@"Label 2"), grey_interactable(),
+                                       grey_sufficientlyVisible(), nil);
+  [[GREYConfiguration sharedConfiguration] setValue:@(1)
+                                       forConfigKey:kGREYConfigKeyInteractionTimeoutDuration];
+  [[[EarlGrey selectElementWithMatcher:matcher]
+         usingSearchAction:grey_scrollInDirection(kGREYDirectionDown, 50)
+      onElementWithMatcher:grey_accessibilityLabel(@"Upper Scroll View")]
+      assertWithMatcher:grey_sufficientlyVisible()
+                  error:nil];
+  NSString *expectedDetails = @"Search action failed: Interaction cannot continue because the "
+                              @"desired element was not found.\n"
+                              @"\n"
+                              @"Check if the element exists in the UI hierarchy printed below. If "
+                              @"it exists, adjust the matcher so that it accurately matches "
+                              @"the element.\n"
+                              @"\n"
+                              @"Element Matcher:\n"
+                              @"(((respondsToSelector(isAccessibilityElement) && "
+                              @"isAccessibilityElement) && accessibilityLabel('Label 2')) && "
+                              @"interactable Point:{nan, nan} && sufficientlyVisible(Expected: "
+                              @"0.750000, Actual: 0.000000))\n"
+                              @"\n"
+                              @"Assertion Criteria: assertWithMatcher:sufficientlyVisible(Expe"
+                              @"cted: 0.750000, Actual: 0.000000)\n"
+                              @"\n"
+                              @"Search API Info\n"
+                              @"Search Action: ";
   XCTAssertTrue([_handler.details containsString:expectedDetails]);
 }
 
