@@ -527,7 +527,7 @@
     if (([errorDomain isEqualToString:kGREYInteractionErrorDomain]) &&
         (errorCode == kGREYInteractionTimeoutErrorCode)) {
       errorDetails[kErrorDetailActionNameKey] = action.name;
-      errorDetails[kErrorDetailRecoverySuggestionKey] = @"Increase timeout for matching element";
+      errorDetails[kErrorDetailRecoverySuggestionKey] = @"Increase timeout for matching element.";
       errorDetails[kErrorDetailElementMatcherKey] = _elementMatcher.description;
       NSArray *keyOrder = @[
         kErrorDetailActionNameKey, kErrorDetailElementMatcherKey, kErrorDetailRecoverySuggestionKey
@@ -688,12 +688,10 @@
     NSInteger errorCode = [errorDescriptions[kErrorCodeKey] integerValue];
     if (([errorDomain isEqualToString:kGREYInteractionErrorDomain]) &&
         (errorCode == kGREYInteractionTimeoutErrorCode)) {
-      errorDetails[kErrorDetailAssertCriteriaKey] = assertion.name;
-      errorDetails[kErrorDetailRecoverySuggestionKey] = @"Increase timeout for matching element";
+      errorDetails[kErrorDetailRecoverySuggestionKey] = @"Increase timeout for matching element.";
       errorDetails[kErrorDetailElementMatcherKey] = _elementMatcher.description;
       NSArray *keyOrder = @[
-        kErrorDetailAssertCriteriaKey, kErrorDetailElementMatcherKey,
-        kErrorDetailRecoverySuggestionKey
+        kErrorDetailElementMatcherKey, kErrorDetailRecoverySuggestionKey
       ];
 
       NSString *reasonDetail = [GREYObjectFormatter formatDictionary:errorDetails
@@ -707,10 +705,8 @@
       [assertionError setErrorInfo:errorDetails];
     } else if (([errorDomain isEqualToString:kGREYUIThreadExecutorErrorDomain]) &&
                (errorCode == kGREYUIThreadExecutorTimeoutErrorCode)) {
-      errorDetails[kErrorDetailAssertCriteriaKey] = assertion.name;
       errorDetails[kErrorDetailElementMatcherKey] = _elementMatcher.description;
-
-      NSArray *keyOrder = @[ kErrorDetailAssertCriteriaKey, kErrorDetailElementMatcherKey ];
+      NSArray *keyOrder = @[ kErrorDetailElementMatcherKey ];
       NSString *reasonDetail = [GREYObjectFormatter formatDictionary:errorDetails
                                                               indent:kGREYObjectFormatIndent
                                                            hideEmpty:YES
