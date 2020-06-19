@@ -174,6 +174,9 @@
                               @"interactable Point:{nan, nan} && sufficientlyVisible(Expected: "
                               @"0.750000, Actual: 0.000000))\n"
                               @"\n"
+                              @"Assertion Criteria: assertWithMatcher:sufficientlyVisible(E"
+                              @"xpected: 0.750000, Actual: 0.000000)\n"
+                              @"\n"
                               @"UI Hierarchy";
   XCTAssertTrue([_handler.details containsString:expectedDetails]);
 }

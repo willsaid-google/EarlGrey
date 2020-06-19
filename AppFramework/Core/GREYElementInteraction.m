@@ -688,10 +688,12 @@
     NSInteger errorCode = [errorDescriptions[kErrorCodeKey] integerValue];
     if (([errorDomain isEqualToString:kGREYInteractionErrorDomain]) &&
         (errorCode == kGREYInteractionTimeoutErrorCode)) {
+      errorDetails[kErrorDetailAssertCriteriaKey] = assertion.name;
       errorDetails[kErrorDetailRecoverySuggestionKey] = @"Increase timeout for matching element.";
       errorDetails[kErrorDetailElementMatcherKey] = _elementMatcher.description;
       NSArray *keyOrder = @[
-        kErrorDetailElementMatcherKey, kErrorDetailRecoverySuggestionKey
+        kErrorDetailAssertCriteriaKey, kErrorDetailElementMatcherKey,
+        kErrorDetailRecoverySuggestionKey
       ];
 
       NSString *reasonDetail = [GREYObjectFormatter formatDictionary:errorDetails
@@ -705,8 +707,10 @@
       [assertionError setErrorInfo:errorDetails];
     } else if (([errorDomain isEqualToString:kGREYUIThreadExecutorErrorDomain]) &&
                (errorCode == kGREYUIThreadExecutorTimeoutErrorCode)) {
+      errorDetails[kErrorDetailAssertCriteriaKey] = assertion.name;
       errorDetails[kErrorDetailElementMatcherKey] = _elementMatcher.description;
-      NSArray *keyOrder = @[ kErrorDetailElementMatcherKey ];
+
+      NSArray *keyOrder = @[ kErrorDetailAssertCriteriaKey, kErrorDetailElementMatcherKey ];
       NSString *reasonDetail = [GREYObjectFormatter formatDictionary:errorDetails
                                                               indent:kGREYObjectFormatIndent
                                                            hideEmpty:YES
