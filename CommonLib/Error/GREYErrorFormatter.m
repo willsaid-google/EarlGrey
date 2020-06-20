@@ -56,8 +56,8 @@ static NSString *const kErrorPrefix = @"EarlGrey Encountered an Error:";
 
 BOOL GREYShouldUseErrorFormatterForError(GREYError *error) {
   return [error.domain isEqualToString:kGREYInteractionErrorDomain] &&
-          (error.code == kGREYInteractionElementNotFoundErrorCode ||
-           error.code == kGREYInteractionTimeoutErrorCode);
+         (error.code == kGREYInteractionElementNotFoundErrorCode ||
+          error.code == kGREYInteractionTimeoutErrorCode);
 }
 
 BOOL GREYShouldUseErrorFormatterForDetails(NSString *failureHandlerDetails) {
