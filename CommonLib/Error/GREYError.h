@@ -94,11 +94,6 @@ GREY_EXTERN NSString *const kErrorDetailAssertCriteriaKey;
 GREY_EXTERN NSString *const kErrorDetailRecoverySuggestionKey;
 
 /**
- * Key used to retrieve the list of elements matched when multiple elements are matched.
- */
-GREY_EXTERN NSString *const kErrorDetailElementsMatchedKey;
-
-/**
  * Key used to retrieve the error domain from an error object.
  */
 GREY_EXTERN NSString *const kErrorDomainKey;
