@@ -589,7 +589,6 @@
         break;
       }
       case kGREYInteractionMultipleElementsMatchedErrorCode: {
-        errorDetails[kErrorDetailActionNameKey] = action.name;
         errorDetails[kErrorDetailElementMatcherKey] = _elementMatcher.description;
         
         NSString *recoverySuggestion1 = @"Create a more specific matcher to uniquely match the "
@@ -614,7 +613,7 @@
         }
 
         NSArray *keyOrder = @[
-          kErrorDetailActionNameKey, kErrorDetailElementMatcherKey,
+          kErrorDetailElementMatcherKey,
           kErrorDetailRecoverySuggestionKey
         ];
         NSString *reasonDetail = [GREYObjectFormatter formatDictionary:errorDetails
