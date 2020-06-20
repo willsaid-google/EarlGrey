@@ -34,35 +34,7 @@ static NSString *const kHierarchyUserInteractionEnabledKey       = @"User Intera
 static NSString *const kHierarchyLegendKey                       = @"Legend";
 static NSString *const kHierarchyHeaderKey                       = @"UI Hierarchy (ordered by wind"
                                                                    @"ow level, back to front):\n";
-
-#pragma mark - GREYErrorFormatterFlag
-
-/**
- * Keys used by GREYErrorFormatter to format a GREYError's userInfo properties.
- * These states are not mutually exclusive and can be combined together using Bitwise-OR to
- * represent multiple states.
- * If more than 32 options exists, change the bitshifted values to UL.
- */
-typedef NS_OPTIONS(NSUInteger, GREYErrorFormatterFlag) {
-  /** Empty Error Description  */
-  GREYErrorFormatterNone = 0,
-  /** Exception Reason */
-  GREYErrorFormatterFlagExceptionReason = 1 << 0,
-  /** Recovery Suggestion */
-  GREYErrorFormatterFlagRecoverySuggestion = 1 << 1,
-  /** Element Matcher */
-  GREYErrorFormatterFlagElementMatcher = 1 << 2,
-  /** Search API Info  */
-  GREYErrorFormatterFlagSearchActionInfo = 1 << 3,
-  /** Assertion Criteria, or Action Name */
-  GREYErrorFormatterFlagCriteria = 1 << 4,
-  /** Underlying ("Nested") Error */
-  GREYErrorFormatterFlagUnderlyingError = 1 << 5,
-  /** App UI Hierarchy */
-  GREYErrorFormatterFlagUIHierarchy = 1 << 6,
-  /** If Multiple Elements were Matched */
-  GREYErrorFormatterFlagMultipleMatched = 1 << 7,
-};
+static NSString *const kErrorPrefix = @"EarlGrey Encountered an Error:";
 
 #pragma mark - GREYErrorFormatter
 
@@ -72,7 +44,7 @@ typedef NS_OPTIONS(NSUInteger, GREYErrorFormatterFlag) {
 
 + (NSString *)formattedDescriptionForError:(GREYError *)error {
   if (GREYShouldUseErrorFormatterForError(error)) {
-    return loggerDescription(error);
+    return LoggerDescription(error);
   }
   return [GREYObjectFormatter formatDictionary:[error grey_descriptionDictionary]
                                         indent:kGREYObjectFormatIndent
@@ -88,38 +60,13 @@ BOOL GREYShouldUseErrorFormatterForError(GREYError *error) {
             error.code == kGREYInteractionMultipleElementsMatchedErrorCode);
 }
 
-BOOL GREYShouldUseErrorFormatterForExceptionReason(NSString *reason) {
-  return [reason containsString:@"the desired element was not found"] ||
-         [reason containsString:@"Multiple elements were matched"];
+BOOL GREYShouldUseErrorFormatterForDetails(NSString *failureHandlerDetails) {
+  return [failureHandlerDetails hasPrefix:kErrorPrefix];
 }
 
 #pragma mark - Static Functions
 
-// The keys whose values should be supplied in the formatted error output.
-static NSUInteger loggerKeys(GREYError *error) {
-  if ([error.domain isEqualToString:kGREYInteractionErrorDomain] &&
-       error.code == kGREYInteractionElementNotFoundErrorCode) {
-     return GREYErrorFormatterFlagExceptionReason |
-            GREYErrorFormatterFlagRecoverySuggestion |
-            GREYErrorFormatterFlagElementMatcher |
-            GREYErrorFormatterFlagCriteria |
-            GREYErrorFormatterFlagSearchActionInfo |
-            GREYErrorFormatterFlagUnderlyingError |
-            GREYErrorFormatterFlagUIHierarchy;
-  }
-  if ([error.domain isEqualToString:kGREYInteractionErrorDomain] &&
-       error.code == kGREYInteractionMultipleElementsMatchedErrorCode) {
-    return GREYErrorFormatterFlagExceptionReason    |
-           GREYErrorFormatterFlagRecoverySuggestion |
-           GREYErrorFormatterFlagElementMatcher     |
-           GREYErrorFormatterFlagMultipleMatched    |
-           GREYErrorFormatterFlagUnderlyingError    |
-           GREYErrorFormatterFlagUIHierarchy;
-  }
-  GREYFatalAssertWithMessage(false, @"Error Domain and Code Not Yet Supported");
-}
-
-static NSString *formattedHierarchy(NSString *hierarchy) {
+static NSString *FormattedHierarchy(NSString *hierarchy) {
   if (!hierarchy) {
     return nil;
   }
@@ -144,78 +91,66 @@ static NSString *formattedHierarchy(NSString *hierarchy) {
   return [logger componentsJoinedByString:@"\n"];
 }
 
-static NSString *loggerDescription(GREYError *error) {
-  NSUInteger keys = loggerKeys(error);
-  
+static NSString *LoggerDescription(GREYError *error) {
   NSMutableArray<NSString *> *logger = [[NSMutableArray alloc] init];
   
-  if (keys & GREYErrorFormatterFlagExceptionReason) {
-    NSString *exceptionReason = error.localizedDescription;
-    [logger addObject:[NSString stringWithFormat:@"\n%@", exceptionReason]];
+  // Flag checked by GREYErrorFormatted(details, screenshotPaths).
+  // TODO(wsaid): remove this when the GREYErrorFormatted(details, screenshotPaths) is removed
+  [logger addObject:kErrorPrefix];
+  
+  NSString *exceptionReason = error.localizedDescription;
+  if (exceptionReason) {
+    [logger addObject:[NSString stringWithFormat:@"%@", exceptionReason]];
   }
   
-  if (keys & GREYErrorFormatterFlagRecoverySuggestion) {
-    NSString *recoverySuggestion = error.userInfo[kErrorDetailRecoverySuggestionKey];
-    if (recoverySuggestion) {
-      [logger addObject:recoverySuggestion];
-    }
+  NSString *recoverySuggestion = error.userInfo[kErrorDetailRecoverySuggestionKey];
+  if (recoverySuggestion) {
+    [logger addObject:recoverySuggestion];
   }
   
-  if (keys & GREYErrorFormatterFlagElementMatcher) {
-    NSString *elementMatcher = error.userInfo[kErrorDetailElementMatcherKey];
-    if (elementMatcher) {
-      [logger addObject:[NSString stringWithFormat:@"%@:\n%@", kErrorDetailElementMatcherKey,
-                         elementMatcher]];
-    }
+  NSString *elementMatcher = error.userInfo[kErrorDetailElementMatcherKey];
+  if (elementMatcher) {
+    [logger addObject:[NSString stringWithFormat:@"%@:\n%@", kErrorDetailElementMatcherKey,
+                       elementMatcher]];
   }
   
-  if (keys & GREYErrorFormatterFlagCriteria) {
-    NSString *assertionCriteria = error.userInfo[kErrorDetailAssertCriteriaKey];
-    if (assertionCriteria) {
-      [logger addObject:[NSString stringWithFormat:@"%@: %@", kErrorDetailAssertCriteriaKey,
-                         assertionCriteria]];
-    }
-    NSString *actionCriteria = error.userInfo[kErrorDetailActionNameKey];
-    if (actionCriteria) {
-      [logger addObject:[NSString stringWithFormat:@"%@: %@", kErrorDetailActionNameKey,
-                         actionCriteria]];
-    }
+  NSString *assertionCriteria = error.userInfo[kErrorDetailAssertCriteriaKey];
+  if (assertionCriteria) {
+    [logger addObject:[NSString stringWithFormat:@"%@: %@", kErrorDetailAssertCriteriaKey,
+                       assertionCriteria]];
+  }
+  NSString *actionCriteria = error.userInfo[kErrorDetailActionNameKey];
+  if (actionCriteria) {
+    [logger addObject:[NSString stringWithFormat:@"%@: %@", kErrorDetailActionNameKey,
+                       actionCriteria]];
   }
   
-  if (keys & GREYErrorFormatterFlagMultipleMatched) {
-    NSArray<NSString *> *multipleElementsMatched = error.multipleElementsMatched;
-    if (multipleElementsMatched) {
-      [logger addObject:[NSString stringWithFormat:@"%@:", kErrorDetailElementsMatchedKey]];
-      [multipleElementsMatched enumerateObjectsUsingBlock: ^(NSString *element,
-                                                             NSUInteger index, BOOL *stop) {
-        // Numbered list of all elements that were matched, starting at 1.
-        [logger addObject:[NSString stringWithFormat:@"%lu. %@",
-                           (unsigned long)index + 1, element]];
-      }];
-      [logger addObject:@"\n"];
-    }
+  NSArray<NSString *> *multipleElementsMatched = error.multipleElementsMatched;
+  if (multipleElementsMatched) {
+    [logger addObject:[NSString stringWithFormat:@"%@:", kErrorDetailElementsMatchedKey]];
+    [multipleElementsMatched enumerateObjectsUsingBlock: ^(NSString *element,
+                                                           NSUInteger index, BOOL *stop) {
+      // Numbered list of all elements that were matched, starting at 1.
+      [logger addObject:[NSString stringWithFormat:@"%lu. %@",
+                         (unsigned long)index + 1, element]];
+    }];
+    [logger addObject:@"\n"];
   }
   
-  if (keys & GREYErrorFormatterFlagSearchActionInfo) {
-    NSString *searchActionInfo = error.userInfo[kErrorDetailSearchActionInfoKey];
-    if (searchActionInfo) {
-      [logger addObject:[NSString stringWithFormat:@"%@\n%@", kErrorDetailSearchActionInfoKey,
-                         searchActionInfo]];
-    }
+  NSString *searchActionInfo = error.userInfo[kErrorDetailSearchActionInfoKey];
+  if (searchActionInfo) {
+    [logger addObject:[NSString stringWithFormat:@"%@\n%@", kErrorDetailSearchActionInfoKey,
+                       searchActionInfo]];
   }
   
-  if (keys & GREYErrorFormatterFlagUnderlyingError) {
-    NSString *nestedError = error.nestedError.description;
-    if (nestedError) {
-      [logger addObject:[NSString stringWithFormat:@"Underlying Error:\n%@", nestedError]];
-    }
+  NSString *nestedError = error.nestedError.description;
+  if (nestedError) {
+    [logger addObject:[NSString stringWithFormat:@"Underlying Error:\n%@", nestedError]];
   }
   
-  if (keys & GREYErrorFormatterFlagUIHierarchy) {
-    NSString *UIHierarchy = formattedHierarchy(error.appUIHierarchy);
-    if (UIHierarchy) {
-      [logger addObject:UIHierarchy];
-    }
+  NSString *UIHierarchy = FormattedHierarchy(error.appUIHierarchy);
+  if (UIHierarchy) {
+    [logger addObject:UIHierarchy];
   }
   
   return [NSString stringWithFormat:@"%@\n", [logger componentsJoinedByString:@"\n\n"]];
