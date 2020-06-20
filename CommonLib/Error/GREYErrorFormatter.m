@@ -60,11 +60,11 @@ BOOL GREYShouldUseErrorFormatterForError(GREYError *error) {
             error.code == kGREYInteractionConstraintsFailedErrorCode);
 }
 
-#pragma mark - Static Functions
-
 BOOL GREYShouldUseErrorFormatterForDetails(NSString *failureHandlerDetails) {
   return [failureHandlerDetails hasPrefix:kErrorPrefix];
 }
+
+#pragma mark - Static Functions
 
 static NSString *FormattedHierarchy(NSString *hierarchy) {
   if (!hierarchy) {
@@ -120,10 +120,10 @@ static NSString *LoggerDescription(GREYError *error) {
                        failedConstraints]];
   }
   
-  NSString *element = error.userInfo[kErrorDetailElementDescriptionKey];
-  if (element) {
+  NSString *elementDescription = error.userInfo[kErrorDetailElementDescriptionKey];
+  if (elementDescription) {
     [logger addObject:[NSString stringWithFormat:@"%@:\n%@", kErrorDetailElementDescriptionKey,
-                       element]];
+                       elementDescription]];
   }
   
   NSString *assertionCriteria = error.userInfo[kErrorDetailAssertCriteriaKey];
