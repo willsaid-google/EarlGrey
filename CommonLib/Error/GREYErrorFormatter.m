@@ -34,6 +34,7 @@ static NSString *const kHierarchyUserInteractionEnabledKey       = @"User Intera
 static NSString *const kHierarchyLegendKey                       = @"Legend";
 static NSString *const kHierarchyHeaderKey                       = @"UI Hierarchy (ordered by wind"
                                                                    @"ow level, back to front):\n";
+static NSString *const kErrorPrefix = @"EarlGrey Encountered an Error:";
 
 #pragma mark - GREYErrorFormatter
 
@@ -59,9 +60,8 @@ BOOL GREYShouldUseErrorFormatterForError(GREYError *error) {
            error.code == kGREYInteractionTimeoutErrorCode);
 }
 
-BOOL GREYShouldUseErrorFormatterForExceptionReason(NSString *reason) {
-  return [reason containsString:@"the desired element was not found"] ||
-         [reason containsString:@"timed out"];
+BOOL GREYShouldUseErrorFormatterForDetails(NSString *failureHandlerDetails) {
+  return [failureHandlerDetails hasPrefix:kErrorPrefix];
 }
 
 #pragma mark - Static Functions
@@ -94,9 +94,13 @@ static NSString *FormattedHierarchy(NSString *hierarchy) {
 static NSString *LoggerDescription(GREYError *error) {
   NSMutableArray<NSString *> *logger = [[NSMutableArray alloc] init];
   
+  // Flag checked by GREYErrorFormatted(details, screenshotPaths).
+  // TODO(wsaid): remove this when the GREYErrorFormatted(details, screenshotPaths) is removed
+  [logger addObject:kErrorPrefix];
+  
   NSString *exceptionReason = error.localizedDescription;
   if (exceptionReason) {
-    [logger addObject:[NSString stringWithFormat:@"\n%@", exceptionReason]];
+    [logger addObject:[NSString stringWithFormat:@"%@", exceptionReason]];
   }
   
   NSString *recoverySuggestion = error.userInfo[kErrorDetailRecoverySuggestionKey];
