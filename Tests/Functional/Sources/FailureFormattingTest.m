@@ -86,7 +86,7 @@
                               @"((kindOfClass('UILabel') || kindOfClass('UITextField') || "
                               @"kindOfClass('UITextView')) && hasText('Basic Views'))\n"
                               @"\n"
-                              @"Assertion Criteria: assertWithMatcher:isNotNil";
+                              @"Failing Assertion: assertWithMatcher:isNotNil";
   XCTAssertTrue([_handler.details containsString:expectedDetails]);
 }
 
@@ -115,7 +115,7 @@
                               @"interactable Point:{nan, nan} && sufficientlyVisible(Expected: "
                               @"0.750000, Actual: 0.000000))\n"
                               @"\n"
-                              @"Assertion Criteria: assertWithMatcher:sufficientlyVisible(Expe"
+                              @"Failing Assertion: assertWithMatcher:sufficientlyVisible(Expe"
                               @"cted: 0.750000, Actual: 0.000000)\n"
                               @"\n"
                               @"Search API Info\n"
@@ -148,7 +148,7 @@
                               @"(respondsToSelector(accessibilityIdentifier) && "
                               @"accessibilityID('TestWKWebView'))\n"
                               @"\n"
-                              @"Action Name: Execute JavaScript";
+                              @"Failing Action: Execute JavaScript";
   XCTAssertTrue([_handler.details containsString:expectedDetails]);
 }
 
