@@ -55,8 +55,9 @@ static NSString *const kErrorPrefix = @"EarlGrey Encountered an Error:";
 #pragma mark - Public Functions
 
 BOOL GREYShouldUseErrorFormatterForError(GREYError *error) {
-  return [error.domain isEqualToString:kGREYInteractionErrorDomain] &&
-          error.code == kGREYInteractionElementNotFoundErrorCode;
+    return [error.domain isEqualToString:kGREYInteractionErrorDomain] &&
+           (error.code == kGREYInteractionElementNotFoundErrorCode ||
+            error.code == kGREYInteractionMultipleElementsMatchedErrorCode);
 }
 
 BOOL GREYShouldUseErrorFormatterForDetails(NSString *failureHandlerDetails) {
@@ -122,6 +123,18 @@ static NSString *LoggerDescription(GREYError *error) {
   if (actionCriteria) {
     [logger addObject:[NSString stringWithFormat:@"%@: %@", kErrorDetailActionNameKey,
                        actionCriteria]];
+  }
+  
+  NSArray<NSString *> *multipleElementsMatched = error.multipleElementsMatched;
+  if (multipleElementsMatched) {
+    [logger addObject:[NSString stringWithFormat:@"%@:", kErrorDetailElementsMatchedKey]];
+    [multipleElementsMatched enumerateObjectsUsingBlock: ^(NSString *element,
+                                                           NSUInteger index, BOOL *stop) {
+      // Numbered list of all elements that were matched, starting at 1.
+      [logger addObject:[NSString stringWithFormat:@"%lu. %@",
+                         (unsigned long)index + 1, element]];
+    }];
+    [logger addObject:@"\n"];
   }
   
   NSString *searchActionInfo = error.userInfo[kErrorDetailSearchActionInfoKey];
